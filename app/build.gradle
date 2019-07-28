@@ -83,4 +83,6 @@ dependencies {
     implementation "com.github.bumptech.glide:glide:$version_glide"
     annotationProcessor "com.github.bumptech.glide:compiler:$version_glide"
 
+    implementation "androidx.recyclerview:recyclerview:$version_recyclerview"
+
 }
