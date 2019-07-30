@@ -20,10 +20,13 @@ package com.example.android.marsrealestate.overview
 import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import com.example.android.marsrealestate.R
 import com.example.android.marsrealestate.databinding.FragmentOverviewBinding
 import com.example.android.marsrealestate.databinding.GridViewItemBinding
+import com.example.android.marsrealestate.network.MarsApiFilter
 
 /**
  * This fragment shows the the status of the Mars real-estate web services transaction.
@@ -51,11 +54,20 @@ class OverviewFragment : Fragment() {
         binding.setLifecycleOwner(this)
 
         // Giving the binding access to the OverviewViewModel
-        binding.photosGrid.adapter = PhotoGridAdapter()
+
 
         binding.viewModel = viewModel
 
+        binding.photosGrid.adapter = PhotoGridAdapter(OnClickListener {
+            viewModel.displayPropertyDetails(it)
+        })
 
+        viewModel.navigateToSelectedProperty.observe(this, Observer {
+            if(it != null){
+                findNavController().navigate(OverviewFragmentDirections.actionShowDetail(it))
+                viewModel.displayPropertyDetailsComplete()
+            }
+        })
 
         setHasOptionsMenu(true)
         return binding.root
@@ -67,5 +79,16 @@ class OverviewFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.overflow_menu, menu)
         super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when(item?.itemId){
+            R.id.show_all_menu -> viewModel.updateFilter(MarsApiFilter.SHOW_ALL)
+            R.id.show_buy_menu -> viewModel.updateFilter(MarsApiFilter.SHOW_BUY)
+            R.id.show_rent_menu -> viewModel.updateFilter(MarsApiFilter.SHOW_RENT)
+            else -> return super.onOptionsItemSelected(item)
+        }
+        return true
+
     }
 }

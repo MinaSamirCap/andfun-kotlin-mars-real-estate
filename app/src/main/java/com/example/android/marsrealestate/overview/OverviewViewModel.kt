@@ -21,6 +21,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.android.marsrealestate.network.MarsApi
+import com.example.android.marsrealestate.network.MarsApiFilter
 import com.example.android.marsrealestate.network.MarsProperty
 import kotlinx.coroutines.*
 
@@ -28,7 +29,7 @@ import kotlinx.coroutines.*
  * The [ViewModel] that is attached to the [OverviewFragment].
  */
 
-enum class MarsApiState{LOADING, ERROR, DONE}
+enum class MarsApiState { LOADING, ERROR, DONE }
 
 class OverviewViewModel : ViewModel() {
 
@@ -47,21 +48,25 @@ class OverviewViewModel : ViewModel() {
     private var viewModelJob = Job()
     private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
 
+    private val _navigateToSelectedProperty = MutableLiveData<MarsProperty>()
+    val navigateToSelectedProperty: LiveData<MarsProperty>
+        get () = _navigateToSelectedProperty
+
     /**
      * Call getMarsRealEstateProperties() on init so we can display status immediately.
      */
     init {
-        getMarsRealEstateProperties()
+        getMarsRealEstateProperties(MarsApiFilter.SHOW_ALL)
     }
 
     /**
      * Sets the value of the status LiveData to the Mars API status.
      */
-    private fun getMarsRealEstateProperties() {
+    private fun getMarsRealEstateProperties(filter: MarsApiFilter) {
         // TODO (05) Call the MarsApi to enqueue the Retrofit request, implementing the callbacks
 
         coroutineScope.launch {
-            val getPropertiesDeferred = MarsApi.retrofitService.getProperties()
+            val getPropertiesDeferred = MarsApi.retrofitService.getProperties(filter.value)
             try {
                 _status.value = MarsApiState.LOADING
                 val listResult = getPropertiesDeferred.await()
@@ -74,8 +79,20 @@ class OverviewViewModel : ViewModel() {
         }
     }
 
+    fun updateFilter(filter: MarsApiFilter){
+        getMarsRealEstateProperties(filter)
+    }
+
     override fun onCleared() {
         super.onCleared()
         coroutineScope.cancel()
+    }
+
+    fun displayPropertyDetails(property: MarsProperty) {
+        _navigateToSelectedProperty.value = property
+    }
+
+    fun displayPropertyDetailsComplete() {
+        _navigateToSelectedProperty.value = null
     }
 }
